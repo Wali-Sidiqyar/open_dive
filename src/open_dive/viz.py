@@ -39,6 +39,7 @@ def plot_nifti(
     scalar_colorbar: bool = True,
     tractography_path: list[os.PathLike] | None = None,
     tractography_opacity: float = 0.6,
+    tractography_opacities: list[float] | None=None,
     tractography_values: list[float] | None = None,
     tractography_cmap: str | None = None,
     tractography_cmap_range: tuple[int, int] | None = None,
@@ -79,6 +80,8 @@ def plot_nifti(
         Optional tractogram(s) to plot with slices. Can provide multiple files
     tractography_opacity : float, default 0.6
         Optional opacity value for tractograms between (0, 1)
+    tractography_opacities : list of float, optional
+        Optional opacities for each tractogram file
     tractography_values : list of float, optional
         Optional values to color the tractography with
     tractography_cmap : str, default "Set1" or "plasma"
@@ -200,12 +203,25 @@ def plot_nifti(
             )
             scene.add(tract_bar)
 
-        # Add each tractography with its corresponding color
-        stream_actors = _create_tractography_actor(
-            tractography_path,
-            colors=colors,
-            tractography_opacity=tractography_opacity,
-        )
+        # Add each tractography with its corresponding color and opacity
+        if tractography_opacities is not None:
+            if len(tractography_opacities) != len(tractography_path):
+                raise ValueError("Length of tractography_opacities must match number of tractography files.")
+            stream_actors= []
+            for path, color, opacity in zip(tractography_path, colors, tractography_opacities):
+                actor_list = _create_tractography_actor(
+                    [path],
+                    colors = [color],
+                    tractography_opacity = opacity,
+                )
+                stream_actors.extend(actor_list)
+        else:
+
+            stream_actors = _create_tractography_actor(
+                tractography_path,
+                colors=colors,
+                tractography_opacity=tractography_opacity,
+            )
         for stream_actor in stream_actors:
             scene.add(stream_actor)
 
