@@ -39,6 +39,7 @@ def plot_nifti(
     scalar_colorbar: bool = True,
     tractography_path: list[os.PathLike] | None = None,
     tractography_opacity: float = 0.6,
+    tractography_opacities: list[float] | None = None,
     tractography_values: list[float] | None = None,
     tractography_cmap: str | None = None,
     tractography_cmap_range: tuple[int, int] | None = None,
@@ -48,6 +49,7 @@ def plot_nifti(
     odf_path: os.PathLike | None = None,
     sh_basis: str = "descoteaux07",
     scale: int = 1,
+    zoom: float = 1.0,
     glass_brain_path: os.PathLike | None = None,
     **kwargs,
 ) -> None:
@@ -78,7 +80,9 @@ def plot_nifti(
     tractography_path : list of os.Pathlike, optional
         Optional tractogram(s) to plot with slices. Can provide multiple files
     tractography_opacity : float, default 0.6
-        Optional opacity value for tractograms between (0, 1)
+        Optional opacity value for tractograms between (0, 1]
+    tractography_opacities: list of float, optional
+        Optional opacity for each tractogram between (0, 1]
     tractography_values : list of float, optional
         Optional values to color the tractography with
     tractography_cmap : str, default "Set1" or "plasma"
@@ -200,12 +204,24 @@ def plot_nifti(
             )
             scene.add(tract_bar)
 
-        # Add each tractography with its corresponding color
-        stream_actors = _create_tractography_actor(
-            tractography_path,
-            colors=colors,
-            tractography_opacity=tractography_opacity,
-        )
+        # Add each tractography with its corresponding color and opacity
+        if tractography_opacities is not None:
+            if len(tractography_opacities) != len(tractography_path):
+                raise ValueError("Length of tractography_opacities must match number of tractography files.")
+            stream_actors= []
+            for path, color, opacity in zip(tractography_path, colors, tractography_opacities):
+                actor_list = _create_tractography_actor(
+                    [path],
+                    colors = [color],
+                    tractography_opacity = opacity,
+                )
+                stream_actors.extend(actor_list)
+        else:
+            stream_actors = _create_tractography_actor(
+                tractography_path,
+                colors = colors,
+                tractography_opacity = tractography_opacity,
+            )
         for stream_actor in stream_actors:
             scene.add(stream_actor)
 
@@ -243,6 +259,7 @@ def plot_nifti(
         scene=scene,
         azimuth=azimuth,
         elevation=elevation,
+        zoom=zoom,
         scene_bound_data=scene_bound_data,
         scene_bound_affine=scene_bound_affine,
     )
@@ -495,6 +512,7 @@ def _set_camera(
     scene: window.Scene,
     azimuth: float,
     elevation: float,
+    zoom: float = 1.0,
     scene_bound_data: np.ndarray | None = None,
     scene_bound_affine: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -520,8 +538,8 @@ def _set_camera(
         camera_pos = sphere2cart(camera_pos_r, camera_pos_theta, camera_pos_phi)
         camera_up = sphere2cart(camera_up_r, camera_up_theta, camera_up_phi)
 
-        # Scale to 1.5*max dimension and shift to middle of array
-        camera_pos = np.array(camera_pos) * 1.5 * max(scene_bound_data.shape) + np.array(
+        # Default distance is 1.5*max dimenson. Divide by zoom to simulate zooming in or out. Shift to middle of array
+        camera_pos = np.array(camera_pos) *( 1.5 * max(scene_bound_data.shape)/zoom) + np.array(
             [
                 scene_bound_data.shape[0] // 2,
                 scene_bound_data.shape[1] // 2,
