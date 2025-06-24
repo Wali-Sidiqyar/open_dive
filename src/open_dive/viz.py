@@ -101,6 +101,8 @@ def plot_nifti(
         Basis type for the spherical harmonics, either "descoteaux07" or "tournier07"
     scale : float, default 1
         Scale of the tensor glyphs or ODF glyphs
+    zoom : float, default 1
+        Zoom factor for the camera (1.0 = default; <1.0 zooms in; >1.0 zooms out).
     glass_brain_path : os.PathLike, optional
         Optional glass brain mask to overlay
 
@@ -516,7 +518,7 @@ def _set_camera(
     scene_bound_data: np.ndarray | None = None,
     scene_bound_affine: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Set the camera position and orientation."""
+    """Set the camera position, orientation, and zoom."""
     if scene_bound_data is not None:
         camera_pos = np.array([0, 0, 1])
         camera_focal = np.array([0, 0, 0])
