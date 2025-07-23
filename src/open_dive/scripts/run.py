@@ -92,14 +92,14 @@ def main():
     tractography_group.add_argument(
         "--tractography_opacity",
         type=float,
+        nargs="+",
         default=0.6,
-        help="Value to use for the tractogram opacity in range (0, 1]. Default is 0.6.",
+        help="Value to use for the tractogram opacity in range (0, 1].If a list, each value corresponds to a tractogram in --tractography_path.  Default is 0.6.",
     )
     tractography_group.add_argument(
-        "--tractography_opacities",
-        type=float,
-        nargs="+",
-        help="List of opacities for each tractogram file. Must match the number of files in --tractography_path. Opacities are in range (0,1]."
+        "--use_orientation_rgb",
+        action = "store_true",
+        help="Use RGB coloring based on local streamline orientation.",
     )
     tractography_group.add_argument(
         "--tractography_colorbar",
@@ -188,7 +188,7 @@ def main():
         scalar_colorbar=args.scalar_colorbar,
         tractography_path=args.tractography_path,
         tractography_opacity=args.tractography_opacity,
-        tractography_opacities=args.tractography_opacities,
+        use_orientation_rgb=args.use_orientation_rgb,
         tractography_values=args.tractography_values,
         tractography_cmap=args.tractography_cmap,
         tractography_cmap_range=args.tractography_cmap_range,
