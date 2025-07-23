@@ -220,11 +220,13 @@ def plot_nifti(
         stream_actors= []
         if tractography_opacity is not None:
             # If a single float is provided, expand it to match number of tracts
-            if isinstance(tractography_opacity, float):
-                tractography_opacities = [tractography_opacity] * len(tractography_path)
+            if isinstance(tractography_opacity, float) or (isinstance(tractography_opacity, list) and len(tractography_opacity) == 1):
+                if isinstance(tractography_opacity, list):
+                    tractography_opacities = [tractography_opacity[0]] * len(tractography_path)
+                else:
+                    tractography_opacities =  [tractography_opacity] * len(tractography_path)
             else:
-                tractography_opacities = tractography_opacity
-
+                    tractography_opacities = tractography_opacity
             if len(tractography_opacities) != len(tractography_path):
                 raise ValueError("Length of tractography_opacity list must match number of tractography files.")
             for i, (path, opacity) in enumerate(zip(tractography_path, tractography_opacities)):
