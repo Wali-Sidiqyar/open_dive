@@ -44,6 +44,10 @@ def plot_nifti(
     tractography_cmap: str | None = None,
     tractography_cmap_range: tuple[int, int] | None = None,
     tractography_colorbar: bool = False,
+    tract_tubes: bool = False,
+    tract_radius: float | None = 0.1,
+   # tract_dither: bool = False,
+    tract_shading: bool = False,
     volume_idx: int | None = None,
     tensor_path: os.PathLike | None = None,
     odf_path: os.PathLike | None = None,
@@ -91,6 +95,14 @@ def plot_nifti(
         Optional range to use for the colormap
     tractography_colorbar : bool, default False
         Whether to show a colorbar for the tractography
+    tract_tubes : bool, default False
+        Whether to render as tubes instead of lines
+    tract_radius : float, default 0.1
+        Radius of rendered tubes
+    tract_dither : bool, default False
+        Whether to include random noise in rendering
+    tract_shading : bool, default False
+        Whether to enable Phong shading for tube lighting
     volume_idx : int, optional
         Index of the volume to display if the image is 4D
     tensor_path : os.PathLike, optional
@@ -236,6 +248,10 @@ def plot_nifti(
                         colors = [color],
                         tractography_opacity = opacity,
                         use_orientation_rgb=use_orientation_rgb,
+                        tract_tubes=tract_tubes,
+                        tract_radius=tract_radius,
+    #                    tract_dither=tract_dither,
+                        tract_shading=tract_shading,
                     )
                     stream_actors.extend(actor_list)
         else:
@@ -244,6 +260,10 @@ def plot_nifti(
                 colors = colors,
                 tractography_opacity = 0.6,
                 use_orientation_rgb=use_orientation_rgb,
+                tract_tubes=tract_tubes,
+                tract_radius=tract_radius,
+     #           tract_dither=tract_dither,
+                tract_shading=tract_shading,
             )
         for stream_actor in stream_actors:
             scene.add(stream_actor)
@@ -432,11 +452,16 @@ def _create_tractography_actor(
     colors: list[tuple[float, float, float]],
     tractography_opacity:list[float] = [0.6],
     use_orientation_rgb: bool = False,
+    tract_tubes: bool = False,
+    tract_radius: float =0.1,
+    tract_dither: bool = False,
+    tract_shading: bool = False,
 ) -> list[Actor]:
     """
     Create tractography actors from a list of NIFTI files.
     If `use_orientation_rgb` is True, colors are computed locally per point based on fiber orientation.
     Otherwise, use provided colors list for whole tracts.
+    Supports tubes, radius scaling, shading, and RGB dithering for non-tube rendering.
     """
 
     # Loop over each tractography file and create an actor unless orientation RGB
@@ -459,10 +484,20 @@ def _create_tractography_actor(
                 last_color = rgb_colors[-1]
                 rgb_colors = np.vstack([rgb_colors, last_color])
                 local_colors.extend(rgb_colors)
-            stream_actor = actor.line(streamlines, colors=local_colors, linewidth=0.2, opacity=tractography_opacity[i])
+            if tract_tubes:
+                stream_actor = actor.streamtube(streamlines, colors=local_colors, linewidth=tract_radius, opacity=tractography_opacity[i])
+                if tract_shading:
+                    stream_actor.GetProperty().SetInterpolationToPhong()
+            else:
+                stream_actor = actor.line(streamlines, colors=local_colors, linewidth=0.2, opacity=tractography_opacity[i])
         else:
             color = colors[i]
-            stream_actor = actor.line(streamlines, colors=color, linewidth=0.2, opacity=tractography_opacity[i])
+            if tract_tubes:
+                stream_actor = actor.streamtube(streamlines, colors=color, linewidth=tract_radius, opacity=tractography_opacity[i])
+                if tract_shading:
+                    stream_actor.GetProperty().SetInterpolationToPhong()
+            else:
+                stream_actor = actor.line(streamlines, colors=color, linewidth=0.2, opacity=tractography_opacity[i])
 
         stream_actors.append(stream_actor)
     return stream_actors

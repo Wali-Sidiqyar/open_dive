@@ -106,7 +106,27 @@ def main():
         action="store_true",
         help="Whether to show a tractography values colorbar. Default is False.",
     )
-
+    tractography_group.add_argument(
+       "--tract_tubes",
+       action="store_true",
+       help="Render tracts as tubes instead of lines",
+    )
+    tractography_group.add_argument(
+        "--tract_radius",
+        type=float,
+        default=0.1,
+        help="Radius of tract tubes (default: 0.1)",
+    )
+ #   tractography_group.add_argument(
+  #      "--tract_dither",
+   #     action="store_true",
+    #    help="Add noise to tract tubes",
+   # )
+    tractography_group.add_argument(
+        "--tract_shading",
+        action="store_true",
+        help="Enable Phong shading on tract tubes",
+    )
     glyph_group.add_argument(
         "--tensor_path",
         type=Path,
@@ -193,6 +213,10 @@ def main():
         tractography_cmap=args.tractography_cmap,
         tractography_cmap_range=args.tractography_cmap_range,
         tractography_colorbar=args.tractography_colorbar,
+        tract_tubes=args.tract_tubes,
+        tract_radius=args.tract_radius,
+#        tract_dither=args.tract_dither,
+        tract_shading=args.tract_shading,
         tensor_path=args.tensor_path,
         odf_path=args.odf_path,
         sh_basis=args.sh_basis,
