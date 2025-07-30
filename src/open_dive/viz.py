@@ -99,7 +99,7 @@ def plot_nifti(
         Whether to render as tubes instead of lines
     tract_radius : float, default 0.1
         Radius of rendered tubes
-    tract_dither : bool, default False
+    tract_dither : bool, default False, NOT YET IN USE
         Whether to include random noise in rendering
     tract_shading : bool, default False
         Whether to enable Phong shading for tube lighting
